@@ -1,0 +1,8 @@
+[package]
+name = "oneweb3grant"
+edition = "2024.beta"
+
+[dependencies]
+
+[addresses]
+oneweb3grant = "0x0"
