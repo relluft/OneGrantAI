@@ -328,7 +328,7 @@ export default function IdeaLab() {
         const fakeDigest = "mock_digest_" + Math.random().toString(36).substring(2, 12);
         setDigest(fakeDigest);
         setStatus("success");
-        await api.submitFinish(address || '0x0');
+        api.submitFinish(address || '0x0').catch(() => {});
         saveToLocalStorage({
           grantId: selectedGrantId,
           status: "Submitted",
@@ -345,7 +345,7 @@ export default function IdeaLab() {
         arguments: [
           tx.object(CONTRACT.REGISTRY_OBJECT_ID),
           tx.pure.u64(parseInt(selectedGrantId)),
-          tx.pure.vector('u8', [].slice.call(ideaHash)),
+          tx.pure.vector('u8', Array.from(ideaHash)),
           tx.object('0x6'),
         ]
       });
@@ -353,7 +353,7 @@ export default function IdeaLab() {
       const response = await signAndExecute({ transaction: tx as any });
       setDigest(response.digest);
       setStatus("success");
-      await api.submitFinish(address || '0x0');
+      api.submitFinish(address || '0x0').catch(() => {});
       saveToLocalStorage({
         grantId: selectedGrantId,
         status: "Submitted",
@@ -366,6 +366,7 @@ export default function IdeaLab() {
       if (e.message) console.error("Message:", e.message);
       if (e.data) console.error("Data:", e.data);
       setStatus("error");
+      setDigest(e?.message || e?.toString() || "Unknown error");
     }
   };
 
@@ -651,8 +652,14 @@ export default function IdeaLab() {
                     ×
                   </div>
                   <h2 style={{ color: '#FF3333' }}>Transaction Failed</h2>
-                  <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Something went wrong while recording on-chain.</p>
-                  <button className="btn-primary" style={{ marginTop: '1rem' }} onClick={() => setStatus("idle")}>
+                  <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>Something went wrong while recording on-chain.</p>
+                  {digest && (
+                    <div style={{ background: 'rgba(255,0,0,0.05)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', border: '1px solid rgba(255,0,0,0.2)', maxHeight: '120px', overflowY: 'auto' }}>
+                      <div style={{ fontSize: '0.7rem', color: '#FF6666', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Error Details</div>
+                      <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-secondary)', wordBreak: 'break-all' }}>{digest}</div>
+                    </div>
+                  )}
+                  <button className="btn-primary" style={{ marginTop: '1rem' }} onClick={() => { setStatus("idle"); setDigest(""); }}>
                     Try Again
                   </button>
                 </div>
