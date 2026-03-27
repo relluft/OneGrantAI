@@ -4,7 +4,7 @@
  */
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const OPENROUTER_KEY = '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';
+const OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_KEY || '';
 const MODEL = 'openai/gpt-5.4-mini';
 
 async function callLLM(messages: {role: string, content: string}[], maxTokens = 600, temperature = 0.7): Promise<string> {
