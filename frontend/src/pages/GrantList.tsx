@@ -4,6 +4,7 @@ import { useCurrentAccount } from '@mysten/dapp-kit';
 import { api } from '../api';
 import { getMockAddress } from '../wallet';
 import { matchGrantsLocal } from '../grantsLocal';
+import { clientAnalyzeMatch } from '../aiClient';
 
 const AVAILABLE_SKILLS = ['Any', 'Move', 'Solidity', 'Rust', 'TypeScript', 'Python', 'React', 'Node.js', 'Go', 'Cairo'];
 const AVAILABLE_INTERESTS = ['Any', 'DeFi', 'GameFi', 'NFT / Digital Art', 'AI / ML', 'Infrastructure', 'DAO / Governance', 'Social', 'Identity', 'Security', 'Education'];
@@ -208,13 +209,21 @@ export default function GrantList() {
     setIsAnalyzing(true);
     setMatchAnalysis("");
     try {
-      const data = await api.analyzeMatch({ wallet_address, grant_id: selectedGrant.grant.id });
-      setMatchAnalysis(data.analysis || "No analysis returned.");
+      let analysisText = '';
+      try {
+        const data = await api.analyzeMatch({ wallet_address, grant_id: selectedGrant.grant.id });
+        analysisText = data.analysis || '';
+        if (!analysisText) throw new Error('Empty analysis from backend');
+      } catch (backendErr) {
+        console.warn('Backend analysis failed, using client-side fallback:', backendErr);
+        analysisText = await clientAnalyzeMatch(selectedGrant.grant);
+      }
+      setMatchAnalysis(analysisText);
     } catch (e: any) {
       if (e.name === 'AbortError') {
         setMatchAnalysis("Analysis timed out. The AI service may be busy — please try again in a moment.");
       } else {
-        setMatchAnalysis("Error fetching analysis. Please check that the backend is running.");
+        setMatchAnalysis("Error fetching analysis. Please try again.");
       }
     } finally {
       setIsAnalyzing(false);

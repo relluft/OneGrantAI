@@ -4,6 +4,7 @@ import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@
 import { Transaction } from '@mysten/sui/transactions';
 import { getMockAddress, CONTRACT } from '../wallet';
 import { api } from '../api';
+import { clientGenerateIdea, clientGenerateDraft, clientChatRefine } from '../aiClient';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { GRANTS } from '../grantsLocal';
@@ -164,15 +165,22 @@ export default function IdeaLab() {
     setChatLoading(true);
     
     try {
-      const res = await api.chatRefine({
-        wallet_address: address || '0x0',
-        grant_id: parseInt(selectedGrantId),
-        context: mode === 'idea' ? aiIdea : draft,
-        messages: newHistory,
-        mode: mode
-      });
+      let responseText = '';
+      try {
+        const res = await api.chatRefine({
+          wallet_address: address || '0x0',
+          grant_id: parseInt(selectedGrantId),
+          context: mode === 'idea' ? aiIdea : draft,
+          messages: newHistory,
+          mode: mode
+        });
+        responseText = res.response;
+      } catch (backendErr) {
+        console.warn('Backend chat failed, using client-side fallback:', backendErr);
+        responseText = await clientChatRefine(selectedGrant, mode === 'idea' ? aiIdea : draft, newHistory, mode);
+      }
       
-      const assistantMsg = { role: 'assistant', content: res.response };
+      const assistantMsg = { role: 'assistant', content: responseText };
       if (mode === 'idea') setIdeaChat([...newHistory, assistantMsg]);
       else setDraftChat([...newHistory, assistantMsg]);
     } catch (e) {
@@ -237,23 +245,32 @@ export default function IdeaLab() {
     setLoading(true);
     setStep(2);
     try {
-      const res = await api.generateIdea({
-        wallet_address: address || '0x0',
-        grant_id: parseInt(selectedGrantId),
-        user_idea: useUserIdea ? userIdea : undefined
-      });
-      if (res.detail || !res.generated_idea) throw new Error(res.detail || "API Error");
-      setAiIdea(res.generated_idea);
+      let ideaText = '';
+      // Try backend first
+      try {
+        const res = await api.generateIdea({
+          wallet_address: address || '0x0',
+          grant_id: parseInt(selectedGrantId),
+          user_idea: useUserIdea ? userIdea : undefined
+        });
+        if (res.detail || !res.generated_idea) throw new Error(res.detail || 'API Error');
+        ideaText = res.generated_idea;
+      } catch (backendErr) {
+        console.warn('Backend AI failed, using client-side fallback:', backendErr);
+        // Fallback: call OpenRouter directly from browser
+        ideaText = await clientGenerateIdea(selectedGrant, useUserIdea ? userIdea : undefined);
+      }
+      setAiIdea(ideaText);
       saveToLocalStorage({
         grantId: selectedGrantId,
         grantTitle: selectedGrant?.title,
         status: "Idea",
         userIdea: useUserIdea ? userIdea : "",
-        aiIdea: res.generated_idea
+        aiIdea: ideaText
       });
     } catch (e) {
       console.error(e);
-      setAiIdea("Failed to generate idea. Ensure AI is online.");
+      setAiIdea("Failed to generate idea. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -263,21 +280,28 @@ export default function IdeaLab() {
     setLoading(true);
     setStep(3);
     try {
-      const res = await api.generateDraft({
-        wallet_address: address || '0x0',
-        grant_id: parseInt(selectedGrantId),
-        idea: aiIdea
-      });
-      if (res.detail || !res.draft_and_checklist) throw new Error(res.detail || "API Error");
-      setDraft(res.draft_and_checklist);
+      let draftText = '';
+      try {
+        const res = await api.generateDraft({
+          wallet_address: address || '0x0',
+          grant_id: parseInt(selectedGrantId),
+          idea: aiIdea
+        });
+        if (res.detail || !res.draft_and_checklist) throw new Error(res.detail || 'API Error');
+        draftText = res.draft_and_checklist;
+      } catch (backendErr) {
+        console.warn('Backend draft failed, using client-side fallback:', backendErr);
+        draftText = await clientGenerateDraft(selectedGrant, aiIdea);
+      }
+      setDraft(draftText);
       saveToLocalStorage({
         grantId: selectedGrantId,
         status: "Draft",
-        draft: res.draft_and_checklist
+        draft: draftText
       });
     } catch (e) {
       console.error(e);
-      setDraft("Error generating draft.");
+      setDraft("Error generating draft. Please try again.");
     } finally {
       setLoading(false);
     }
