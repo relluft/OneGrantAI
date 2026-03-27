@@ -6,6 +6,7 @@ import { getMockAddress, CONTRACT } from '../wallet';
 import { api } from '../api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { GRANTS } from '../grantsLocal';
 
 // Inline Confetti Component
 function Confetti({ active }: { active: boolean }) {
@@ -90,7 +91,12 @@ export default function IdeaLab() {
   }, [status]);
 
   useEffect(() => {
-    api.getGrants().then(setGrants).catch(console.error);
+    api.getGrants()
+      .then(data => {
+        if (data && data.length > 0) setGrants(data);
+        else setGrants(GRANTS);
+      })
+      .catch(() => setGrants(GRANTS));
   }, []);
 
   useEffect(() => {

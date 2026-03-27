@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { api } from '../api';
 import { getMockAddress } from '../wallet';
+import { matchGrantsLocal } from '../grantsLocal';
 
 const AVAILABLE_SKILLS = ['Any', 'Move', 'Solidity', 'Rust', 'TypeScript', 'Python', 'React', 'Node.js', 'Go', 'Cairo'];
 const AVAILABLE_INTERESTS = ['Any', 'DeFi', 'GameFi', 'NFT / Digital Art', 'AI / ML', 'Infrastructure', 'DAO / Governance', 'Social', 'Identity', 'Security', 'Education'];
@@ -59,12 +60,12 @@ export default function GrantList() {
   const fetchMatches = async () => {
     setLoading(true);
     try {
-      // Build profile from localStorage preferences (Vercel is stateless, getProfile will 404)
+      // Build profile from localStorage preferences
       const localProfile = {
         wallet_address: wallet_address || '0x0',
         skills: JSON.parse(localStorage.getItem('pref_skills_arr') || '["Any"]'),
         interests: JSON.parse(localStorage.getItem('pref_interests_arr') || '["Any"]'),
-        experience_level: parseInt(localStorage.getItem('pref_exp') || '0') || 0,
+        experience_level: parseInt(localStorage.getItem('pref_exp') || '2') || 2,
         opportunity_type: localStorage.getItem('pref_type') || 'Both',
         min_reward: parseInt(localStorage.getItem('pref_min') || '0') || 0,
         max_reward: parseInt(localStorage.getItem('pref_max') || '0') || 0,
@@ -73,23 +74,29 @@ export default function GrantList() {
         ecosystems: JSON.parse(localStorage.getItem('pref_eco') || '["OneChain"]'),
       };
 
-      // Try to enrich with server-side profile, but don't fail if it doesn't exist
-      let profile = localProfile;
+      // Try backend API first
       try {
-        if (wallet_address) {
-          const profileInfo = await api.getProfile(wallet_address);
-          profile = { ...localProfile, ...(profileInfo?.profile || {}) };
+        const matchData = await api.matchGrants(localProfile);
+        const matches = matchData?.matches || [];
+        if (matches.length > 0) {
+          setGrants(matches);
+          return;
         }
       } catch (_) {
-        // Profile not found on server — that's fine, use local preferences
+        console.warn('Backend API unavailable, using local matching');
       }
 
-      const matchData = await api.matchGrants(profile);
-      const matches = matchData?.matches || [];
-      setGrants(matches);
+      // Fallback: client-side matching
+      const localMatches = matchGrantsLocal(localProfile);
+      setGrants(localMatches);
     } catch (e) {
       console.warn("Grant fetch error", e);
-      setGrants([]);
+      // Ultimate fallback: show all grants with score 0
+      const localMatches = matchGrantsLocal({
+        skills: ['Any'], interests: ['Any'], experience_level: 2,
+        opportunity_type: 'Both', min_reward: 0, max_reward: 0, ecosystems: ['OneChain']
+      });
+      setGrants(localMatches);
     } finally {
       setLoading(false);
     }
