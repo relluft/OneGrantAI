@@ -241,9 +241,9 @@ one client publish --gas-budget 100000000
 
 | Role | Name |
 |---|---|
-| Full-Stack Developer & Project Lead | Ilya |
-| AI Systems & Smart Contract | Ilya |
-| UI/UX Design | Ilya |
+| Full-Stack Developer & Project Lead | relluft |
+| AI Systems & Smart Contract | relluft |
+| UI/UX Design | relluft |
 
 Solo builder. Built from scratch in under 2 weeks.
 
