@@ -75,10 +75,14 @@ export default function IdeaLab() {
     if (chatEndRef.current) {
       const parent = chatEndRef.current.parentElement;
       if (parent) {
-        parent.scrollTo({
-          top: parent.scrollHeight,
-          behavior: 'smooth'
-        });
+        // Find the last assistant message and scroll to its top
+        const messages = parent.querySelectorAll('.message.assistant');
+        const lastAssistant = messages[messages.length - 1];
+        if (lastAssistant) {
+          lastAssistant.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          parent.scrollTo({ top: parent.scrollHeight, behavior: 'smooth' });
+        }
       }
     }
   }, [ideaChat, draftChat]);
