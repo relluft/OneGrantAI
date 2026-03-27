@@ -62,6 +62,10 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(req)
     });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`generateIdea failed (${res.status}): ${errBody.slice(0, 200)}`);
+    }
     return res.json();
   },
 
@@ -71,6 +75,10 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(req)
     });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`generateDraft failed (${res.status}): ${errBody.slice(0, 200)}`);
+    }
     return res.json();
   },
 
@@ -87,6 +95,10 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(req)
     });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`analyzeMatch failed (${res.status}): ${errBody.slice(0, 200)}`);
+    }
     return res.json();
   },
 
@@ -96,6 +108,10 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(req)
     });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`chatRefine failed (${res.status}): ${errBody.slice(0, 200)}`);
+    }
     return res.json();
   }
 }

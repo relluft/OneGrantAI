@@ -58,7 +58,7 @@ def api_generate_idea(req: IdeaRequest):
         raise HTTPException(status_code=404, detail="Grant not found")
         
     idea_text = generate_idea(profile, grant, req.user_idea)
-    DB_XP[req.wallet_address] += 30
+    DB_XP[req.wallet_address] = DB_XP.get(req.wallet_address, 0) + 30
     return {"generated_idea": idea_text, "xp_earned": 30}
 
 @app.post("/api/generate-draft")
@@ -72,7 +72,7 @@ def api_generate_draft(req: DraftRequest):
         raise HTTPException(status_code=404, detail="Grant not found")
         
     draft_content = generate_draft_and_checklist(profile, grant, req.idea)
-    DB_XP[req.wallet_address] += 50
+    DB_XP[req.wallet_address] = DB_XP.get(req.wallet_address, 0) + 50
     return {"draft_and_checklist": draft_content, "xp_earned": 50}
 
 @app.post("/api/submit-onchain-finish")

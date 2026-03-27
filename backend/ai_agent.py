@@ -13,7 +13,7 @@ base_url = "https://openrouter.ai/api/v1"
 client = openai.OpenAI(
     base_url=base_url if api_key and api_key.startswith("sk-or-v1") else None,
     api_key=api_key,
-    timeout=180.0,
+    timeout=55.0,
     default_headers={
         "HTTP-Referer": "http://localhost:3000",
         "X-Title": "OneWeb3Grant",
@@ -23,7 +23,7 @@ client = openai.OpenAI(
 PRIMARY_MODEL = "openai/gpt-5.4-mini"
 FALLBACK_MODEL = "openai/gpt-4o-mini"
 
-def call_llm(messages, temperature=0.7, max_tokens=600, retries=2):
+def call_llm(messages, temperature=0.7, max_tokens=600, retries=1):
     """Call LLM with retry logic and automatic fallback to another model."""
     models_to_try = [PRIMARY_MODEL, FALLBACK_MODEL]
     last_error = Exception("All models failed")
@@ -42,7 +42,7 @@ def call_llm(messages, temperature=0.7, max_tokens=600, retries=2):
                 last_error = e
                 print(f"[AI] Attempt {attempt+1} with {model} failed: {e}")
                 if attempt < retries - 1:
-                    time.sleep(2 * (attempt + 1))  # exponential backoff
+                    time.sleep(1)  # short backoff for serverless
         print(f"[AI] All retries exhausted for {model}, trying fallback...")
     
     raise last_error

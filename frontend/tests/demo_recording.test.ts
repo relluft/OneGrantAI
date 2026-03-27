@@ -24,7 +24,7 @@ async function waitForDebugPort(port: number, timeoutMs = 30000): Promise<boolea
         console.log('   Chrome version:', data.Browser);
         return true;
       }
-    } catch {}
+    } catch { }
     await new Promise(r => setTimeout(r, 1000));
   }
   return false;
@@ -35,12 +35,12 @@ async function waitForDebugPort(port: number, timeoutMs = 30000): Promise<boolea
   console.log('🔄 Closing any running Chrome...');
   try {
     execSync('taskkill /F /IM chrome.exe 2>nul', { shell: 'cmd.exe', stdio: 'ignore' });
-  } catch {}
+  } catch { }
   try {
     execSync('taskkill /F /IM GoogleCrashHandler.exe 2>nul', { shell: 'cmd.exe', stdio: 'ignore' });
     execSync('taskkill /F /IM GoogleCrashHandler64.exe 2>nul', { shell: 'cmd.exe', stdio: 'ignore' });
-  } catch {}
-  
+  } catch { }
+
   // Wait for processes to fully die
   await new Promise(r => setTimeout(r, 4000));
 
@@ -52,7 +52,7 @@ async function waitForDebugPort(port: number, timeoutMs = 30000): Promise<boolea
     try {
       fs.unlinkSync(lockPath);
       console.log(`   Removed: ${lockFile}`);
-    } catch {}
+    } catch { }
   }
 
   // Step 3: Launch Chrome with debugging port + extensions
