@@ -24,14 +24,14 @@ export default function GrantList() {
   const [showSavedOnly, setShowSavedOnly] = useState(false);
 
   // Preferences form state
-  const [skillsSelected, setSkillsSelected] = useState<string[]>(JSON.parse(localStorage.getItem('pref_skills_arr') || '[]'));
-  const [interestsSelected, setInterestsSelected] = useState<string[]>(JSON.parse(localStorage.getItem('pref_interests_arr') || '[]'));
-  const [experience, setExperience] = useState(parseInt(localStorage.getItem('pref_exp') || "0") || 0);
-  const [opportunityType, setOpportunityType] = useState(localStorage.getItem('pref_type') || "");
+  const [skillsSelected, setSkillsSelected] = useState<string[]>(JSON.parse(localStorage.getItem('pref_skills_arr') || '["Any"]'));
+  const [interestsSelected, setInterestsSelected] = useState<string[]>(JSON.parse(localStorage.getItem('pref_interests_arr') || '["Any"]'));
+  const [experience, setExperience] = useState(parseInt(localStorage.getItem('pref_exp') || "2") || 2);
+  const [opportunityType, setOpportunityType] = useState(localStorage.getItem('pref_type') || "Both");
   const [minReward, setMinReward] = useState<number | ''>(localStorage.getItem('pref_min') ? parseInt(localStorage.getItem('pref_min')!) : '');
   const [maxReward, setMaxReward] = useState<number | ''>(localStorage.getItem('pref_max') ? parseInt(localStorage.getItem('pref_max')!) : '');
-  const [deadline, setDeadline] = useState(localStorage.getItem('pref_deadline') || "");
-  const [teamSize, setTeamSize] = useState(localStorage.getItem('pref_team') || "");
+  const [deadline, setDeadline] = useState(localStorage.getItem('pref_deadline') || "Any");
+  const [teamSize, setTeamSize] = useState(localStorage.getItem('pref_team') || "Any");
   const [ecosystems, setEcosystems] = useState<string[]>(JSON.parse(localStorage.getItem('pref_eco') || '["OneChain"]'));
 
   // Custom Input states
@@ -470,10 +470,11 @@ export default function GrantList() {
           height: 'calc(100vh - 6rem)',
           display: 'flex',
           flexDirection: 'column',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          padding: 0
         }}
       >
-        <div style={{ padding: '1.5rem 1.5rem 120px 1.5rem', overflowY: 'auto', flex: 1, position: 'relative' }} className="custom-scroll">
+        <div style={{ padding: '1.5rem 1.5rem 1.5rem 1.5rem', overflowY: 'auto', flex: 1, position: 'relative' }} className="custom-scroll">
           
           {/* GUEST OVERLAY */}
           {!wallet_address && (
@@ -650,24 +651,23 @@ export default function GrantList() {
 
 
           </div>
+        </div>
           
-          {/* STICKY ACTION BUTTONS */}
-          <div style={{ 
-            position: 'absolute', bottom: 0, left: 0, right: 0,
-            padding: '1.5rem 2rem', 
-            background: 'rgba(20, 20, 43, 0.95)',
-            backdropFilter: 'blur(10px)',
-            borderTop: '1px solid rgba(255,255,255,0.1)',
-            display: 'flex', flexDirection: 'column', gap: '0.5rem',
-            zIndex: 10
-          }}>
-            <button onClick={handleSavePreferences} className="btn-primary" style={{ padding: '0.8rem', fontSize: '1rem' }}>
-              🔄 Apply & Refresh Search
-            </button>
-            <button onClick={resetPreferences} style={{ fontSize: '0.8rem', border: 'none', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', textDecoration: 'underline' }}>
-              ↩ Reset Defaults
-            </button>
-          </div>
+        {/* STICKY ACTION BUTTONS — outside the scroll container */}
+        <div style={{ 
+          flexShrink: 0,
+          padding: '1rem 1.5rem', 
+          background: 'rgba(20, 20, 43, 0.95)',
+          backdropFilter: 'blur(10px)',
+          borderTop: '1px solid rgba(255,255,255,0.1)',
+          display: 'flex', flexDirection: 'column', gap: '0.5rem',
+        }}>
+          <button onClick={handleSavePreferences} className="btn-primary" style={{ padding: '0.8rem', fontSize: '1rem' }}>
+            🔄 Apply & Refresh Search
+          </button>
+          <button onClick={resetPreferences} style={{ fontSize: '0.8rem', border: 'none', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', textDecoration: 'underline' }}>
+            ↩ Reset Defaults
+          </button>
         </div>
       </div>
 
