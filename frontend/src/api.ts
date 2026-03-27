@@ -26,6 +26,11 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(profile)
     });
+    if (!res.ok) {
+      console.warn('saveProfile failed with status', res.status);
+      // Don't throw — profile save is non-critical on Vercel (stateless)
+      return { status: 'skipped' };
+    }
     return res.json();
   },
   
@@ -37,6 +42,7 @@ export const api = {
 
   async getGrants() {
     const res = await fetchWithTimeout(`${API_URL}/grants`);
+    if (!res.ok) throw new Error(`getGrants failed: ${res.status}`);
     return res.json();
   },
 
@@ -46,6 +52,7 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(profile)
     });
+    if (!res.ok) throw new Error(`matchGrants failed: ${res.status}`);
     return res.json();
   },
 

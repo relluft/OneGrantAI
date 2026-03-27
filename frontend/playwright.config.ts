@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
@@ -7,23 +7,30 @@ export default defineConfig({
     timeout: 10 * 1000,
   },
   fullyParallel: false,
-  forbidOnly: !!process.env.CI,
   retries: 0,
   workers: 1,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'https://onegrantai.vercel.app',
     trace: 'on-first-retry',
-    viewport: { width: 1920, height: 1080 },
+    viewport: null,
     headless: false,
     launchOptions: {
-      slowMo: 100, // Slow down for video clarity
+      slowMo: 100,
+      args: [
+        '--start-maximized',
+        '--disable-translate',
+        '--disable-features=TranslateUI',
+        '--lang=en-US',
+      ],
     },
   },
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        channel: 'chromium',
+      },
     },
   ],
 });

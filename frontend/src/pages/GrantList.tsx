@@ -59,9 +59,32 @@ export default function GrantList() {
   const fetchMatches = async () => {
     setLoading(true);
     try {
-      const profileInfo = wallet_address ? await api.getProfile(wallet_address) : { profile: {} };
-      const baseProfile = profileInfo?.profile || {};
-      const matchData = await api.matchGrants({ wallet_address: wallet_address || '0x0', ...baseProfile });
+      // Build profile from localStorage preferences (Vercel is stateless, getProfile will 404)
+      const localProfile = {
+        wallet_address: wallet_address || '0x0',
+        skills: JSON.parse(localStorage.getItem('pref_skills_arr') || '["Any"]'),
+        interests: JSON.parse(localStorage.getItem('pref_interests_arr') || '["Any"]'),
+        experience_level: parseInt(localStorage.getItem('pref_exp') || '0') || 0,
+        opportunity_type: localStorage.getItem('pref_type') || 'Both',
+        min_reward: parseInt(localStorage.getItem('pref_min') || '0') || 0,
+        max_reward: parseInt(localStorage.getItem('pref_max') || '0') || 0,
+        deadline_window: localStorage.getItem('pref_deadline') || 'Any',
+        team_size: localStorage.getItem('pref_team') || 'Any',
+        ecosystems: JSON.parse(localStorage.getItem('pref_eco') || '["OneChain"]'),
+      };
+
+      // Try to enrich with server-side profile, but don't fail if it doesn't exist
+      let profile = localProfile;
+      try {
+        if (wallet_address) {
+          const profileInfo = await api.getProfile(wallet_address);
+          profile = { ...localProfile, ...(profileInfo?.profile || {}) };
+        }
+      } catch (_) {
+        // Profile not found on server — that's fine, use local preferences
+      }
+
+      const matchData = await api.matchGrants(profile);
       const matches = matchData?.matches || [];
       setGrants(matches);
     } catch (e) {
@@ -154,15 +177,15 @@ export default function GrantList() {
     try {
       await api.saveProfile({
         wallet_address: wallet_address || '0x0',
-        skills: skillsSelected,
-        interests: interestsSelected,
-        experience_level: experience,
-        opportunity_type: opportunityType,
-        min_reward: minReward,
-        max_reward: maxReward,
-        deadline_window: deadline,
-        team_size: teamSize,
-        ecosystems: ecosystems
+        skills: skillsSelected.length ? skillsSelected : ['Any'],
+        interests: interestsSelected.length ? interestsSelected : ['Any'],
+        experience_level: experience || 0,
+        opportunity_type: opportunityType || 'Both',
+        min_reward: typeof minReward === 'number' ? minReward : 0,
+        max_reward: typeof maxReward === 'number' ? maxReward : 0,
+        deadline_window: deadline || 'Any',
+        team_size: teamSize || 'Any',
+        ecosystems: ecosystems.length ? ecosystems : ['OneChain']
       });
       await fetchMatches();
     } catch (error) {
